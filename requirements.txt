@@ -1,0 +1,27 @@
+tokenizers
+numpy<2
+
+# Core deep learning stack
+torch==2.3.1+cu121           # Match to your CUDA version (cu121 = CUDA 12.1)
+torchaudio==2.3.1+cu121
+torchvision==0.18.1+cu121
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# Hugging Face ecosystem
+transformers==4.44.2         # Modern Trainer API, bitsandbytes integration
+datasets==2.20.0             # Stable with large dataset streaming
+accelerate==0.33.0           # Device mapping, offloading
+
+# Quantization & optimizers
+bitsandbytes==0.43.1         # 4-bit/8-bit quantization support
+
+# Optional performance boosts
+xformers==0.0.27.post2       # Memory-efficient attention (if supported by GPU)
+
+# Utilities
+sentencepiece==0.2.0         # For some tokenizers
+protobuf==5.27.2             # Avoids version conflicts with HF stack
+
+# WebUI
+fastapi
+uvicorn

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Hybrid Chat</title>
+<style>
+body { font-family: sans-serif; max-width: 600px; margin: auto; }
+#chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: auto; }
+.user { color: blue; }
+.assistant { color: green; }
+</style>
+</head>
+<body>
+<h1>Hybrid Chat</h1>
+<div id="chat"></div>
+<input id="message" type="text" placeholder="Type your message..." style="width:80%">
+<button onclick="sendMessage()">Send</button>
+
+<script>
+const chatDiv = document.getElementById('chat');
+const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+
+function appendMessage(role, text) {
+    const p = document.createElement('p');
+    p.className = role;
+    p.textContent = `${role}: ${text}`;
+    chatDiv.appendChild(p);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+}
+
+function sendMessage() {
+    const msgInput = document.getElementById('message');
+    const message = msgInput.value;
+    msgInput.value = '';
+    appendMessage('user', message);
+
+    const eventSource = new EventSource(`/chat_stream?session_id=${sessionId}&message=${encodeURIComponent(message)}`);
+    let assistantText = '';
+    eventSource.onmessage = function(e) {
+        if (e.data === '[DONE]') {
+            eventSource.close();
+            appendMessage('assistant', assistantText);
+        } else {
+            assistantText += e.data;
+        }
+    };
+    eventSource.onerror = function() {
+        console.error('Stream error');
+        eventSource.close();
+    };
+}
+</script>
+</body>
+</html>

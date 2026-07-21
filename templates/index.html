@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BitNet Chat</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="chat-container">
+    <div id="chat-history"></div>
+
+    <div id="controls">
+      <textarea id="prompt" placeholder="Type your prompt…"></textarea>
+      <button id="send">Send</button>
+      <button id="save">Save</button>
+      <button id="load">Load</button>
+    </div>
+
+    <div id="response-window"></div>
+    <div id="time-stamp"></div>
+  </div>
+
+  <script src="https://unpkg.com/event-source-polyfill@1.0.20/src/eventsource.min.js"></script>
+  <script>
+    const historyEl = document.getElementById('chat-history');
+    const promptEl  = document.getElementById('prompt');
+    const sendBtn   = document.getElementById('send');
+    const saveBtn   = document.getElementById('save');
+    const loadBtn   = document.getElementById('load');
+    const respEl    = document.getElementById('response-window');
+    const timeEl    = document.getElementById('time-stamp');
+
+    // Append a message to chat history
+    function appendHistory(who, text) {
+      const div = document.createElement('div');
+      div.className = who;
+      div.textContent = text;
+      historyEl.appendChild(div);
+      historyEl.scrollTop = historyEl.scrollHeight;
+    }
+
+    // Save/load chat history in localStorage
+    saveBtn.onclick = () => {
+      localStorage.setItem('bitnet_chat', historyEl.innerHTML);
+      alert('Chat history saved');
+    };
+    loadBtn.onclick = () => {
+      const html = localStorage.getItem('bitnet_chat');
+      if (html) historyEl.innerHTML = html;
+    };
+
+    sendBtn.onclick = () => {
+      const prompt = promptEl.value.trim();
+      if (!prompt) return alert('Enter a prompt.');
+
+      // log user message
+      appendHistory('user', prompt);
+
+      // reset response window & metrics
+      respEl.textContent = '';
+      respEl.className = '';
+      respEl.classList.add('thinking');
+      timeEl.textContent = '';
+
+      // open SSE stream
+      const es = new EventSourcePolyfill('/stream', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ prompt })
+      });
+
+      let buffer = '';
+      es.addEventListener('token', e => {
+        if (respEl.classList.contains('thinking')) {
+          respEl.classList.remove('thinking');
+          respEl.classList.add('streaming');
+        }
+        // each e.data is a JS-escaped token string
+        const tok = JSON.parse(e.data);
+        buffer += tok;
+        respEl.textContent = buffer;
+      });
+
+      es.addEventListener('done', e => {
+        const m = JSON.parse(e.data);
+        respEl.classList.remove('streaming');
+        respEl.classList.add('done');
+        timeEl.textContent = 
+          `Tokens: ${m.tokens} | Time: ${m.durationSec}s | ` +
+          `Throughput: ${m.toksPerSec} t/s`;
+
+        appendHistory('assistant', buffer);
+      });
+
+      es.addEventListener('error', () => {
+        respEl.className = ''; 
+        respEl.classList.add('done');
+        respEl.textContent = '❌ Error during generation.';
+        es.close();
+      });
+
+      // close on end-of-stream
+      es.addEventListener('end', () => es.close());
+    };
+  </script>
+</body>
+</html>
