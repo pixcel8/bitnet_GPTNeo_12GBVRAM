@@ -1,2 +1,2 @@
 # bitnet_GPTNeo_12GBVRAM
-LLM learning experiment for CPU-GPU hybrid training, finetuning and inference 
+bitnet and GPTNeo inspired LLM learning experiment for training, finetuning and a main target of a workable CPU-GPU hybrid inference architecture.
