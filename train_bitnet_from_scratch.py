@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # Train BitNet-style ternary-weight Transformer → eval → best-model saving
 # Target VRAM: ~12 GB on 16 GB RTX-class GPU
-# Preserves: GPU throughput benchmarking, dynamic model scaling, visualization,
-# weighted sampling, early stopping, best-model restore, summary logging.
+# GPU throughput benchmarking, dynamic model scaling, visualization, weighted sampling, early stopping, best-model restore, summary logging.
 
 # ─── 0. Imports & Environment ───────────────────────────────────────────────────
 import os
